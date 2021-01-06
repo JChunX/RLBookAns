@@ -1,5 +1,6 @@
 from gym_minigrid.minigrid import *
 from gym_minigrid.register import register
+import random
 
 '''
 Gym environment for RL book ex 6.9 & 6.10
@@ -57,10 +58,11 @@ class WindyEnv(MiniGridEnv):
     
     def __init__(
         self,
-        width=10,
-        height=7,
-        agent_start_pos=(1, 3),
-        agent_start_dir=0
+        width=10+2,
+        height=7+2,
+        agent_start_pos=(1, 4),
+        agent_start_dir=0,
+        stochastic_wind=False
     ):
         self.agent_start_pos = agent_start_pos
         self.agent_start_dir = agent_start_dir
@@ -74,7 +76,8 @@ class WindyEnv(MiniGridEnv):
         self.actions = WindyEnv.Actions
         self.action_space = spaces.Discrete(len(self.actions))
         self.reward_range = (-1, 1)
-        self.wind = [0, 0, 0, 0, -1, -1, -1, -2, -2, -1, 0, 0]
+        self.stochastic_wind = stochastic_wind
+        self.wind = [0] + [0, 0, 0, -1, -1, -1, -2, -2, -1, 0] + [0]
     
     def _gen_grid(self, width, height):
         # Create an empty grid
@@ -105,7 +108,11 @@ class WindyEnv(MiniGridEnv):
         return DIR_TO_VEC[self.agent_dir]
 
     def blow_wind(self):
-    	return np.array((0, self.wind[self.agent_pos[0]]))
+        if self.stochastic_wind:
+            return np.array((0, random.randint(-1,1) + 
+                                self.wind[self.agent_pos[0]]))
+        else:
+            return np.array((0, self.wind[self.agent_pos[0]]))
     
     def move_forward(self, move=True):   
         # Get the position in front of the agent
@@ -156,8 +163,17 @@ class WindyEnv(MiniGridEnv):
 class WindyEnvDefault(WindyEnv):
     def __init__(self):
         super().__init__()
+
+class WindyEnvStochastic(WindyEnv):
+    def __init__(self):
+        super().__init__(stochastic_wind=True)
         
 register(
     id = 'MiniGrid-Windy-10x7-v0',
     entry_point = 'gym_minigrid.envs:WindyEnvDefault'
+)
+
+register(
+    id = 'MiniGrid-WindyStochastic-10x7-v0',
+    entry_point = 'gym_minigrid.envs:WindyEnvStochastic'
 )
