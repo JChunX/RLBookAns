@@ -53,7 +53,7 @@ class WindyEnv(MiniGridEnv):
         W = 6
         NW = 7
         stop = 8
-        # Done completing task
+
         done = 9
     
     def __init__(
@@ -62,6 +62,7 @@ class WindyEnv(MiniGridEnv):
         height=7+2,
         agent_start_pos=(1, 4),
         agent_start_dir=0,
+        has_wind=True, 
         stochastic_wind=False
     ):
         self.agent_start_pos = agent_start_pos
@@ -76,8 +77,12 @@ class WindyEnv(MiniGridEnv):
         self.actions = WindyEnv.Actions
         self.action_space = spaces.Discrete(len(self.actions))
         self.reward_range = (-1, 1)
-        self.stochastic_wind = stochastic_wind
-        self.wind = [0] + [0, 0, 0, -1, -1, -1, -2, -2, -1, 0] + [0]
+        if has_wind:
+            self.stochastic_wind = stochastic_wind
+            self.wind = [0] + [0, 0, 0, -1, -1, -1, -2, -2, -1, 0] + [0] # pad with zeros on boarder
+        else:
+            self.stochastic_wind = False
+            self.wind = [0] + [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] + [0]
     
     def _gen_grid(self, width, height):
         # Create an empty grid
@@ -167,6 +172,10 @@ class WindyEnvDefault(WindyEnv):
 class WindyEnvStochastic(WindyEnv):
     def __init__(self):
         super().__init__(stochastic_wind=True)
+
+class WindyEnvNoWind(WindyEnv):
+    def __init__(self):
+        super().__init__(has_wind=False)
         
 register(
     id = 'MiniGrid-Windy-10x7-v0',
@@ -176,4 +185,9 @@ register(
 register(
     id = 'MiniGrid-WindyStochastic-10x7-v0',
     entry_point = 'gym_minigrid.envs:WindyEnvStochastic'
+)
+
+register(
+    id = 'MiniGrid-WindyNoWind-10x7-v0',
+    entry_point = 'gym_minigrid.envs:WindyEnvNoWind'
 )
